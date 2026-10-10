@@ -3,190 +3,221 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>إدارة تراخيص الحضور - GitHub Pages</title>
+<title>SoftKey - إدارة التراخيص والموظفين</title>
 <style>
 :root{--bg:#0f172a;--card:#1e293b;--line:#334155;--fg:#e2e8f0;--mut:#94a3b8;--pri:#2563eb;--ok:#16a34a;--warn:#d97706;--err:#dc2626;}
 *{box-sizing:border-box;font-family:"Segoe UI",Tahoma,sans-serif;}
 body{margin:0;background:var(--bg);color:var(--fg);}
-header{background:#111827;padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;}
-header h1{font-size:18px;margin:0;}
-header .store{font-size:12px;color:var(--mut);direction:ltr;}
-main{max-width:1150px;margin:0 auto;padding:18px;}
+header{background:#111827;padding:12px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+header h1{font-size:17px;margin:0;color:#60a5fa;}
+header .store{font-size:11px;color:var(--mut);direction:ltr;}
+header .who{margin-inline-start:auto;font-size:12.5px;color:var(--fg);}
+header .who b{color:#4ade80;}
+main{max-width:1180px;margin:0 auto;padding:16px;}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;}
 .card h2{font-size:14px;margin:0 0 10px;color:var(--mut);font-weight:600;}
 label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;}
-input,select,textarea{background:#0b1220;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;width:100%;}
-textarea{min-height:70px;direction:ltr;font-family:Consolas,monospace;}
-.row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+input,select{background:#0b1220;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;width:100%;}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.row2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 .field{margin-bottom:10px;}
 button{background:var(--pri);color:#fff;border:0;border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer;}
-button.sec{background:#334155;}
-button.ok{background:var(--ok);}
-button.warn{background:var(--warn);}
-button.err{background:var(--err);}
-button.sm{padding:4px 8px;font-size:12px;}
-button:disabled{opacity:.5;cursor:not-allowed;}
+button.sec{background:#334155;}button.ok{background:var(--ok);}button.warn{background:var(--warn);}button.err{background:var(--err);}
+button.sm{padding:4px 8px;font-size:12px;margin:1px;}
+button:disabled{opacity:.45;cursor:not-allowed;}
 table{width:100%;border-collapse:collapse;font-size:12.5px;}
 th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:right;}
-th{color:var(--mut);font-weight:600;text-align:right;}
+th{color:var(--mut);font-weight:600;}
 td.key{font-family:Consolas,monospace;direction:ltr;text-align:left;font-size:12px;}
-td.hwid{font-family:Consolas,monospace;direction:ltr;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+td.hwid{font-family:Consolas,monospace;direction:ltr;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;}
 .b-active{background:rgba(22,163,74,.2);color:#4ade80;}
 .b-revoked{background:rgba(220,38,38,.2);color:#f87171;}
-#log{font-family:Consolas,monospace;font-size:12px;direction:ltr;white-space:pre-wrap;max-height:140px;overflow:auto;background:#0b1220;border:1px solid var(--line);border-radius:6px;padding:8px;}
-.actions-bar{display:flex;gap:8px;flex-wrap:wrap;}
-.hint{font-size:11.5px;color:var(--mut);margin-top:4px;}
+.b-admin{background:rgba(37,99,235,.2);color:#93c5fd;}
+.b-user{background:rgba(100,116,139,.2);color:#cbd5e1;}
+#log{font-family:Consolas,monospace;font-size:12px;direction:ltr;white-space:pre-wrap;max-height:150px;overflow:auto;background:#0b1220;border:1px solid var(--line);border-radius:6px;padding:8px;}
+.actions-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.hint{font-size:11.5px;color:var(--mut);}
+.tabs{display:flex;gap:6px;margin-bottom:12px;}
+.tabs button{background:#1e293b;border:1px solid var(--line);}
+.tabs button.active{background:var(--pri);border-color:var(--pri);}
+.overlay{position:fixed;inset:0;background:linear-gradient(160deg,#0b1220,#111827);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.box h1{text-align:center;font-size:20px;margin:0 0 6px;color:#60a5fa;}
+.box p.sub{text-align:center;color:var(--mut);font-size:12px;margin:0 0 16px;}
+.msg{font-size:12.5px;min-height:18px;margin-top:8px;text-align:center;}
+.msg.err{color:#f87171;}.msg.ok{color:#4ade80;}
+.perms{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;color:var(--fg);}
+.perms label{display:flex;align-items:center;gap:6px;color:var(--fg);margin:0;}
+.perms input{width:auto;}
+.hidden{display:none !important;}
 </style>
 </head>
 <body>
+
+<div id="loginScreen" class="overlay">
+  <div class="box">
+    <h1>SoftKey</h1>
+    <p class="sub">نظام إدارة تراخيص الحضور والموظفين</p>
+
+    <div id="setupBox" class="hidden">
+      <p class="sub">تهيئة أول مرة: أنشئ حساب المدير العام</p>
+      <div class="field"><label>اسم المستخدم</label><input id="suUser" value="admin"></div>
+      <div class="field"><label>الاسم</label><input id="suName" placeholder="المدير العام"></div>
+      <div class="field"><label>كلمة المرور</label><input id="suPass" type="password"></div>
+      <div class="field"><label>تأكيد كلمة المرور</label><input id="suPass2" type="password"></div>
+      <button id="btnSetup" style="width:100%">إنشاء الحساب</button>
+    </div>
+
+    <div id="loginBox">
+      <div class="field"><label>اسم المستخدم</label><input id="lgUser" autocomplete="username"></div>
+      <div class="field"><label>كلمة المرور</label><input id="lgPass" type="password" autocomplete="current-password"></div>
+      <button id="btnLogin" style="width:100%">دخول</button>
+    </div>
+
+    <div id="loginMsg" class="msg"></div>
+    <div style="text-align:center;margin-top:10px;">
+      <span class="hint">إعدادات الاتصال</span>
+      <button id="btnShowCfg" class="sec sm">عرض</button>
+    </div>
+    <div id="loginCfg" class="hidden" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px;">
+      <div class="row2">
+        <div class="field"><label>Owner</label><input id="lcfgOwner" value="emadshipa"></div>
+        <div class="field"><label>Repo</label><input id="lcfgRepo" value="softkey"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Branch</label><input id="lcfgBranch" value="main"></div>
+        <div class="field"><label>Users file</label><input id="lcfgUsersPath" value="users.json" dir="ltr"></div>
+      </div>
+      <div class="field"><label>GitHub Token (مطلوب للكتابة/التهيئة)</label><input id="lcfgToken" type="password"></div>
+      <button id="btnSaveLoginCfg" class="sec sm">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
 <header>
-  <h1>لوحة إدارة تراخيص الحضور</h1>
+  <h1>SoftKey</h1>
   <span class="store" id="storeUrl"></span>
+  <span class="who">مرحباً <b id="whoName"></b> <span id="whoRole" class="badge b-user"></span></span>
+  <button id="btnLogout" class="sec sm">خروج</button>
 </header>
 <main>
-  <div class="card">
-    <h2>إعدادات الاتصال (تُحفظ محلياً في المتصفح فقط)</h2>
-    <div class="row3">
-      <div class="field"><label>GitHub Token (صلاحية public_repo / repo)</label><input id="cfgToken" type="password" autocomplete="off"></div>
-      <div class="field"><label>المالك Owner</label><input id="cfgOwner" value="emadshipa"></div>
-      <div class="field"><label>الريبو Repo</label><input id="cfgRepo" value="attendance-license-ghpages"></div>
-    </div>
-    <div class="row3">
-      <div class="field"><label>الفرع Branch</label><input id="cfgBranch" value="main"></div>
-      <div class="field"><label>مسار الملف</label><input id="cfgPath" value="licenses.json" dir="ltr"></div>
-      <div class="field"><label>المفتاح السري للتوقيع (Secret)</label><input id="cfgSecret" type="password" autocomplete="off"></div>
-    </div>
-    <div class="actions-bar">
-      <button id="btnSaveCfg">حفظ الإعدادات</button>
-      <button id="btnLoad" class="sec">تحميل التراخيص</button>
-      <span class="hint" id="cfgHint"></span>
-    </div>
+  <div class="tabs">
+    <button id="tabLic" class="active">التراخيص</button>
+    <button id="tabUsers" class="hidden">الموظفون</button>
   </div>
 
-  <div class="card">
-    <h2>توليد مفاتيح جديدة</h2>
-    <div class="row3">
-      <div class="field"><label>العدد</label><input id="genCount" type="number" value="1" min="1" max="200"></div>
-      <div class="field"><label>ملاحظة</label><input id="genNote" placeholder="مثال: PC-1"></div>
-      <div class="field"><label>ربط بجهاز Hardware ID (اختياري)</label><input id="genHwid" dir="ltr" placeholder="اتركه فارغاً للربط لاحقاً"></div>
+  <section id="viewLic">
+    <div class="card" id="cfgCard">
+      <h2>إعدادات الاتصال (تُحفظ محلياً في المتصفح فقط)</h2>
+      <div class="row">
+        <div class="field"><label>GitHub Token (public_repo / repo)</label><input id="cfgToken" type="password" autocomplete="off"></div>
+        <div class="field"><label>Owner</label><input id="cfgOwner" value="emadshipa"></div>
+        <div class="field"><label>Repo</label><input id="cfgRepo" value="softkey"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Branch</label><input id="cfgBranch" value="main"></div>
+        <div class="field"><label>Licenses file</label><input id="cfgLicsPath" value="licenses.json" dir="ltr"></div>
+        <div class="field"><label>Users file</label><input id="cfgUsersPath" value="users.json" dir="ltr"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>المفتاح السري للتوقيع (Secret)</label><input id="cfgSecret" type="password" autocomplete="off"></div>
+        <div class="field" style="display:flex;align-items:flex-end;gap:8px;">
+          <button id="btnSaveCfg">حفظ الإعدادات</button>
+          <button id="btnLoad" class="sec">تحميل التراخيص</button>
+        </div>
+      </div>
     </div>
-    <button id="btnGen" class="ok">توليد وإضافة للمخزن</button>
-    <span class="hint">التوليد يتطلب إدخال المفتاح السري أعلاه.</span>
-  </div>
 
-  <div class="card">
-    <h2>التراخيص (<span id="cnt">0</span>)</h2>
-    <div class="actions-bar" style="margin-bottom:8px;">
-      <button id="btnCommit" class="warn" disabled>حفظ التغييرات على GitHub</button>
-      <button id="btnReload" class="sec">إعادة التحميل</button>
+    <div class="card" id="genCard">
+      <h2>توليد مفاتيح جديدة</h2>
+      <div class="row">
+        <div class="field"><label>العدد</label><input id="genCount" type="number" value="1" min="1" max="200"></div>
+        <div class="field"><label>ملاحظة</label><input id="genNote" placeholder="مثال: PC-1"></div>
+        <div class="field"><label>Hardware ID (اختياري)</label><input id="genHwid" dir="ltr" placeholder="اتركه فارغاً للربط لاحقاً"></div>
+      </div>
+      <button id="btnGen" class="ok">توليد وإضافة للمخزن</button>
+      <span class="hint">يتطلب إدخال المفتاح السري أعلاه.</span>
     </div>
-    <div style="overflow:auto;">
-      <table>
-        <thead><tr><th>المفتاح</th><th>الحالة</th><th>الجهاز</th><th>ملاحظة</th><th>إجراءات</th></tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
+
+    <div class="card">
+      <h2>التراخيص (<span id="cnt">0</span>)</h2>
+      <div class="actions-bar" style="margin-bottom:8px;">
+        <button id="btnCommit" class="warn" disabled>حفظ التغييرات على GitHub</button>
+        <button id="btnReload" class="sec">إعادة التحميل</button>
+      </div>
+      <div style="overflow:auto;">
+        <table>
+          <thead><tr><th>المفتاح</th><th>الحالة</th><th>الجهاز</th><th>ملاحظة</th><th>إجراءات</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <section id="viewUsers" class="hidden">
+    <div class="card" id="addUserCard">
+      <h2>إضافة موظف</h2>
+      <div class="row">
+        <div class="field"><label>اسم المستخدم</label><input id="nuUser" dir="ltr"></div>
+        <div class="field"><label>الاسم</label><input id="nuName"></div>
+        <div class="field"><label>كلمة المرور</label><input id="nuPass" type="password"></div>
+      </div>
+      <div class="field">
+        <label>الصلاحيات</label>
+        <div class="perms" id="nuPerms"></div>
+      </div>
+      <button id="btnAddUser" class="ok">إضافة الموظف</button>
+      <span class="hint" id="addUserHint"></span>
+    </div>
+
+    <div class="card">
+      <h2>الموظفون (<span id="ucnt">0</span>)</h2>
+      <div class="actions-bar" style="margin-bottom:8px;">
+        <button id="btnCommitUsers" class="warn" disabled>حفظ الموظفين على GitHub</button>
+        <button id="btnReloadUsers" class="sec">إعادة التحميل</button>
+      </div>
+      <div style="overflow:auto;">
+        <table>
+          <thead><tr><th>المستخدم</th><th>الاسم</th><th>الدور</th><th>الصلاحيات</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+          <tbody id="urows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
   <div class="card">
     <h2>السجل</h2>
     <div id="log"></div>
   </div>
 </main>
+</div>
 
 <script>
 const GH_PARTS = ["K9qR2vT8","4mN7pX3w","B6hJ5cL0","eZ1sD8fA"];
 const B32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const LS_KEY = "ar_license_admin_cfg";
-let state = { file: null, sha: null, dirty: false };
+const LS_KEY = "softkey_cfg";
+const SS_USER = "softkey_user";
+const PERMS = [
+  ["view","عرض التراخيص"],
+  ["generate","توليد مفاتيح"],
+  ["bind","ربط/فك ربط الأجهزة"],
+  ["revoke","إلغاء/إعادة تنشيط"],
+  ["delete","حذف المفاتيح"],
+  ["note","تعديل الملاحظات"],
+  ["manage_users","إدارة الموظفين"],
+];
+let state = {
+  lic: null, licSha: null, licDirty: false,
+  users: null, usersSha: null, usersDirty: false,
+  me: null,
+};
 
 function log(msg){
   const el = document.getElementById("log");
   const t = new Date().toLocaleTimeString();
   el.textContent = "[" + t + "] " + msg + "\n" + el.textContent;
-}
-function secretFromCfg(){
-  const s = document.getElementById("cfgSecret").value.trim();
-  return s;
-}
-function cfg(){
-  return {
-    token: document.getElementById("cfgToken").value.trim(),
-    owner: document.getElementById("cfgOwner").value.trim(),
-    repo: document.getElementById("cfgRepo").value.trim(),
-    branch: document.getElementById("cfgBranch").value.trim() || "main",
-    path: document.getElementById("cfgPath").value.trim() || "licenses.json",
-  };
-}
-function saveCfg(){
-  localStorage.setItem(LS_KEY, JSON.stringify({
-    token: document.getElementById("cfgToken").value,
-    owner: document.getElementById("cfgOwner").value,
-    repo: document.getElementById("cfgRepo").value,
-    branch: document.getElementById("cfgBranch").value,
-    path: document.getElementById("cfgPath").value,
-    secret: document.getElementById("cfgSecret").value,
-  }));
-  log("تم حفظ الإعدادات محلياً.");
-}
-function loadCfg(){
-  try{
-    const c = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
-    if(c.token) document.getElementById("cfgToken").value = c.token;
-    if(c.owner) document.getElementById("cfgOwner").value = c.owner;
-    if(c.repo) document.getElementById("cfgRepo").value = c.repo;
-    if(c.branch) document.getElementById("cfgBranch").value = c.branch;
-    if(c.path) document.getElementById("cfgPath").value = c.path;
-    if(c.secret) document.getElementById("cfgSecret").value = c.secret;
-  }catch(e){}
-}
-function updateStoreUrl(){
-  const c = cfg();
-  document.getElementById("storeUrl").textContent =
-    "https://" + c.owner + ".github.io/" + c.repo + "/" + c.path +
-    "   |   raw: https://raw.githubusercontent.com/" + c.owner + "/" + c.repo + "/" + c.branch + "/" + c.path;
-}
-
-async function hmacSign(payloadGroups){
-  const secret = "ghpages::" + GH_PARTS.join("::");
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret),
-    {name:"HMAC", hash:"SHA-256"}, false, ["sign"]);
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadGroups));
-  const bytes = new Uint8Array(sig).slice(0,5);
-  let v = 0n;
-  for(const b of bytes) v = (v << 8n) | BigInt(b);
-  let out = "";
-  for(let i=0;i<8;i++){ out = B32[Number(v & 31n)] + out; v >>= 5n; }
-  return out;
-}
-function hex(bytes){
-  return Array.from(bytes).map(b=>b.toString(16).padStart(2,"0")).join("").toUpperCase();
-}
-async function generateKey(){
-  const rnd = new Uint8Array(10);
-  crypto.getRandomValues(rnd);
-  const payload = hex(rnd);
-  const groups = payload.match(/.{1,4}/g);
-  const payloadGroups = groups.join("-");
-  const sig = await hmacSign(payloadGroups);
-  return payloadGroups + "-" + sig;
-}
-
-async function ghRequest(method, url, body){
-  const c = cfg();
-  const headers = {"Accept":"application/vnd.github+json","Authorization":"Bearer " + c.token};
-  const opts = {method, headers};
-  if(body){ headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
-  const res = await fetch(url, opts);
-  let data = null;
-  try{ data = await res.json(); }catch(e){}
-  return {status: res.status, data};
-}
-function contentsUrl(){
-  const c = cfg();
-  return "https://api.github.com/repos/" + c.owner + "/" + c.repo + "/contents/" + c.path;
 }
 function b64encode(str){
   const bytes = new TextEncoder().encode(str);
@@ -200,57 +231,291 @@ function b64decode(b64){
   for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
   return new TextDecoder().decode(bytes);
 }
-
-async function loadFile(){
-  const c = cfg();
-  if(!c.token || !c.owner || !c.repo){ log("ERROR: أكمل الإعدادات أولاً."); return; }
-  const res = await ghRequest("GET", contentsUrl() + "?ref=" + encodeURIComponent(c.branch), null);
-  if(res.status === 200){
-    const content = b64decode(res.data.content);
-    state.file = JSON.parse(content);
-    state.sha = res.data.sha;
-  } else if(res.status === 404){
-    state.file = {licenses: []};
-    state.sha = null;
-    log("الملف غير موجود — سيتم إنشاؤه عند الحفظ.");
-  } else {
-    log("ERROR تحميل (" + res.status + "): " + JSON.stringify(res.data));
-    return;
-  }
-  if(!state.file.licenses) state.file.licenses = [];
-  state.dirty = false;
-  render();
-  log("تم تحميل " + state.file.licenses.length + " ترخيص.");
+function bytesToB64(bytes){
+  let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin);
 }
-async function commitFile(){
-  const c = cfg();
-  if(!state.file){ log("ERROR: لا يوجد ملف محمّل."); return; }
-  const body = {
-    message: "Update license store (" + state.file.licenses.length + " keys)",
-    content: b64encode(JSON.stringify(state.file, null, 2)),
-    branch: c.branch,
+function b64ToBytes(b64){
+  const bin=atob(b64); const out=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out;
+}
+
+async function hashPassword(password, saltB64){
+  const salt = saltB64 ? b64ToBytes(saltB64) : crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({name:"PBKDF2", salt, iterations:120000, hash:"SHA-256"}, key, 256);
+  return "pbkdf2$120000$" + bytesToB64(salt) + "$" + bytesToB64(new Uint8Array(bits));
+}
+async function verifyPassword(password, stored){
+  try{
+    const p = (stored||"").split("$");
+    if(p.length !== 4 || p[0] !== "pbkdf2") return false;
+    const iters = parseInt(p[1],10);
+    const salt = b64ToBytes(p[2]);
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits({name:"PBKDF2", salt, iterations:iters, hash:"SHA-256"}, key, 256);
+    return bytesToB64(new Uint8Array(bits)) === p[3];
+  }catch(e){ return false; }
+}
+
+function cfg(){
+  return {
+    token: (document.getElementById("cfgToken")||document.getElementById("lcfgToken")).value.trim(),
+    owner: document.getElementById("cfgOwner").value.trim() || document.getElementById("lcfgOwner").value.trim(),
+    repo: document.getElementById("cfgRepo").value.trim() || document.getElementById("lcfgRepo").value.trim(),
+    branch: (document.getElementById("cfgBranch").value.trim() || document.getElementById("lcfgBranch").value.trim()) || "main",
+    licPath: document.getElementById("cfgLicsPath").value.trim() || "licenses.json",
+    usersPath: document.getElementById("cfgUsersPath").value.trim() || document.getElementById("lcfgUsersPath").value.trim() || "users.json",
   };
-  if(state.sha) body.sha = state.sha;
-  const res = await ghRequest("PUT", contentsUrl(), body);
-  if(res.status === 200 || res.status === 201){
-    state.sha = res.data.content ? res.data.content.sha : state.sha;
-    state.dirty = false;
-    document.getElementById("btnCommit").disabled = true;
-    log("تم الحفظ على GitHub بنجاح ✓");
-  } else {
-    log("ERROR حفظ (" + res.status + "): " + JSON.stringify(res.data));
-  }
+}
+function saveCfg(){
+  const c = cfg();
+  const secret = (document.getElementById("cfgSecret").value||"");
+  const cur = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+  localStorage.setItem(LS_KEY, JSON.stringify(Object.assign(cur, {
+    token:c.token, owner:c.owner, repo:c.repo, branch:c.branch, licPath:c.licPath, usersPath:c.usersPath, secret:secret,
+  })));
+  log("تم حفظ الإعدادات محلياً.");
+}
+function loadCfg(){
+  let c = {};
+  try{ c = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); }catch(e){}
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el && v!=null && v!=="") el.value=v; };
+  ["cfgToken","lcfgToken"].forEach(id=>set(id,c.token));
+  set("cfgOwner",c.owner); set("lcfgOwner",c.owner);
+  set("cfgRepo",c.repo); set("lcfgRepo",c.repo);
+  set("cfgBranch",c.branch); set("lcfgBranch",c.branch);
+  set("cfgLicsPath",c.licPath);
+  set("cfgUsersPath",c.usersPath); set("lcfgUsersPath",c.usersPath);
+  set("cfgSecret",c.secret);
+}
+function updateStoreUrl(){
+  const c = cfg();
+  const el = document.getElementById("storeUrl");
+  if(el) el.textContent = "https://" + c.owner + ".github.io/" + c.repo + "/" + c.licPath;
 }
 
+async function ghRequest(method, url, body){
+  const c = cfg();
+  const headers = {"Accept":"application/vnd.github+json","Authorization":"Bearer " + c.token};
+  const opts = {method, headers};
+  if(body){ headers["Content-Type"]="application/json"; opts.body = JSON.stringify(body); }
+  const res = await fetch(url, opts);
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  return {status:res.status, data};
+}
+function contentsUrl(path){
+  const c = cfg();
+  return "https://api.github.com/repos/" + c.owner + "/" + c.repo + "/contents/" + path;
+}
+async function readRepoFile(path){
+  const c = cfg();
+  if(c.token){
+    const res = await ghRequest("GET", contentsUrl(path) + "?ref=" + encodeURIComponent(c.branch), null);
+    if(res.status === 200) return {ok:true, data:JSON.parse(b64decode(res.data.content)), sha:res.data.sha};
+    if(res.status === 404) return {ok:true, data:null, sha:null};
+    return {ok:false, status:res.status, err:res.data};
+  }
+  const raw = "https://raw.githubusercontent.com/" + c.owner + "/" + c.repo + "/" + c.branch + "/" + path + "?t=" + Date.now();
+  try{
+    const r = await fetch(raw);
+    if(r.status === 200) return {ok:true, data:JSON.parse(await r.text()), sha:null};
+    if(r.status === 404) return {ok:true, data:null, sha:null};
+    return {ok:false, status:r.status};
+  }catch(e){ return {ok:false, err:String(e)}; }
+}
+async function writeRepoFile(path, obj, sha, msg){
+  const c = cfg();
+  if(!c.token) return {status:0, data:{message:"لا يوجد توكن GitHub"}};
+  const body = {message: msg || ("Update " + path), content:b64encode(JSON.stringify(obj,null,2)), branch:c.branch};
+  if(sha) body.sha = sha;
+  return await ghRequest("PUT", contentsUrl(path), body);
+}
+
+async function hmacSign(payloadGroups){
+  const secret = "ghpages::" + GH_PARTS.join("::");
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), {name:"HMAC",hash:"SHA-256"}, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadGroups));
+  const bytes = new Uint8Array(sig).slice(0,5);
+  let v = 0n;
+  for(const b of bytes) v = (v << 8n) | BigInt(b);
+  let out = "";
+  for(let i=0;i<8;i++){ out = B32[Number(v & 31n)] + out; v >>= 5n; }
+  return out;
+}
+async function generateKey(){
+  const rnd = new Uint8Array(10); crypto.getRandomValues(rnd);
+  const payload = Array.from(rnd).map(b=>b.toString(16).padStart(2,"0")).join("").toUpperCase();
+  const payloadGroups = payload.match(/.{1,4}/g).join("-");
+  return payloadGroups + "-" + await hmacSign(payloadGroups);
+}
+
+function isAdmin(){ return state.me && state.me.role === "admin"; }
+function can(perm){
+  if(!state.me) return false;
+  if(state.me.role === "admin") return true;
+  return (state.me.permissions || []).includes(perm);
+}
+
+function showLoginMsg(t, cls){
+  const el = document.getElementById("loginMsg");
+  el.textContent = t; el.className = "msg " + (cls||"");
+}
+async function bootstrap(){
+  const r = await readRepoFile(cfg().usersPath);
+  if(!r.ok){ showLoginMsg("تعذر قراءة ملف الموظفين (كود " + (r.status||"?") + "). تحقق من الإعدادات.", "err"); }
+  const users = (r.data && r.data.users) ? r.data.users : [];
+  state.users = users; state.usersSha = r.sha || null;
+  if(users.length === 0){
+    document.getElementById("setupBox").classList.remove("hidden");
+    document.getElementById("loginBox").classList.add("hidden");
+    if(!cfg().token) showLoginMsg("لن تستطيع الحفظ بدون GitHub Token — أدخله من «إعدادات الاتصال».", "err");
+  } else {
+    document.getElementById("setupBox").classList.add("hidden");
+    document.getElementById("loginBox").classList.remove("hidden");
+    const saved = sessionStorage.getItem(SS_USER);
+    if(saved){ const u = users.find(x=>x.username===saved); if(u){ state.me = u; return showApp(); } }
+  }
+}
+async function doSetup(){
+  const user = document.getElementById("suUser").value.trim();
+  const name = document.getElementById("suName").value.trim();
+  const p1 = document.getElementById("suPass").value;
+  const p2 = document.getElementById("suPass2").value;
+  if(!user || !p1){ return showLoginMsg("أدخل اسم المستخدم وكلمة المرور.", "err"); }
+  if(p1 !== p2){ return showLoginMsg("كلمتا المرور غير متطابقتين.", "err"); }
+  if(!cfg().token){ return showLoginMsg("يلزم GitHub Token لإنشاء الحساب.", "err"); }
+  const hash = await hashPassword(p1);
+  const admin = {username:user, name:name||user, role:"admin", permissions:PERMS.map(p=>p[0]), active:true, password_hash:hash, created_at:new Date().toISOString().slice(0,10)};
+  const obj = {users:[admin]};
+  const res = await writeRepoFile(cfg().usersPath, obj, null, "Create users.json (first admin)");
+  if(res.status === 200 || res.status === 201){
+    state.users = [admin]; state.usersSha = res.data.content ? res.data.content.sha : null;
+    state.me = admin; sessionStorage.setItem(SS_USER, user);
+    log("تم إنشاء المدير الأول: " + user);
+    showApp();
+  } else {
+    showLoginMsg("فشل الحفظ: " + JSON.stringify(res.data), "err");
+  }
+}
+async function doLogin(){
+  const user = document.getElementById("lgUser").value.trim();
+  const pass = document.getElementById("lgPass").value;
+  if(!state.users || !state.users.length){ await bootstrap(); if(!state.users || !state.users.length) return; }
+  const u = state.users.find(x=>x.username === user);
+  if(!u){ return showLoginMsg("اسم المستخدم غير موجود.", "err"); }
+  if(u.active === false){ return showLoginMsg("هذا الحساب معطّل.", "err"); }
+  const ok = await verifyPassword(pass, u.password_hash);
+  if(!ok){ return showLoginMsg("كلمة المرور غير صحيحة.", "err"); }
+  state.me = u; sessionStorage.setItem(SS_USER, u.username);
+  showLoginMsg("تم الدخول.", "ok");
+  showApp();
+}
+function logout(){
+  sessionStorage.removeItem(SS_USER);
+  state.me = null;
+  location.reload();
+}
+
+function showApp(){
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("whoName").textContent = state.me.name || state.me.username;
+  const roleBadge = document.getElementById("whoRole");
+  roleBadge.textContent = state.me.role === "admin" ? "مدير" : "موظف";
+  roleBadge.className = "badge " + (state.me.role === "admin" ? "b-admin" : "b-user");
+  applyPermissions();
+  updateStoreUrl();
+  renderPermsChecklist();
+  log("مرحباً " + state.me.username + " — الصلاحيات: " + (isAdmin() ? "الكل (مدير)" : (state.me.permissions||[]).join(",")));
+}
+function applyPermissions(){
+  document.getElementById("genCard").classList.toggle("hidden", !can("generate"));
+  document.getElementById("cfgCard").classList.toggle("hidden", !isAdmin());
+  document.getElementById("tabUsers").classList.toggle("hidden", !can("manage_users"));
+}
+
+function renderPermsChecklist(){
+  const box = document.getElementById("nuPerms");
+  box.innerHTML = "";
+  for(const [k,label] of PERMS){
+    const l = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.value = k; cb.checked = false;
+    if(k === "manage_users") cb.disabled = !isAdmin();
+    l.appendChild(cb); l.appendChild(document.createTextNode(label));
+    box.appendChild(l);
+  }
+}
+function selectedPerms(){
+  return Array.from(document.querySelectorAll("#nuPerms input:checked")).map(x=>x.value);
+}
+
+async function loadLicenses(){
+  const r = await readRepoFile(cfg().licPath);
+  if(!r.ok){ log("ERROR تحميل التراخيص (" + r.status + "): " + JSON.stringify(r.err)); return; }
+  state.lic = r.data || {licenses:[]};
+  state.licSha = r.sha || null;
+  if(!state.lic.licenses) state.lic.licenses = [];
+  state.licDirty = false;
+  renderLicenses();
+  log("تم تحميل " + state.lic.licenses.length + " ترخيص.");
+}
+async function commitLicenses(){
+  if(!state.lic){ return log("ERROR: لا يوجد ملف محمّل."); }
+  const res = await writeRepoFile(cfg().licPath, state.lic, state.licSha, "Update license store (" + state.lic.licenses.length + " keys)");
+  if(res.status === 200 || res.status === 201){
+    state.licSha = res.data.content ? res.data.content.sha : state.licSha;
+    state.licDirty = false; document.getElementById("btnCommit").disabled = true;
+    log("تم حفظ التراخيص على GitHub ✓");
+  } else log("ERROR حفظ (" + res.status + "): " + JSON.stringify(res.data));
+}
+async function loadUsers(){
+  const r = await readRepoFile(cfg().usersPath);
+  if(!r.ok){ log("ERROR تحميل الموظفين (" + r.status + ")"); return; }
+  state.users = (r.data && r.data.users) ? r.data.users : [];
+  state.usersSha = r.sha || null;
+  state.usersDirty = false;
+  renderUsers();
+  log("تم تحميل " + state.users.length + " موظف.");
+}
+async function commitUsers(){
+  if(!state.users){ return; }
+  const res = await writeRepoFile(cfg().usersPath, {users:state.users}, state.usersSha, "Update users (" + state.users.length + ")");
+  if(res.status === 200 || res.status === 201){
+    state.usersSha = res.data.content ? res.data.content.sha : state.usersSha;
+    state.usersDirty = false; document.getElementById("btnCommitUsers").disabled = true;
+    log("تم حفظ الموظفين على GitHub ✓");
+  } else log("ERROR حفظ الموظفين (" + res.status + "): " + JSON.stringify(res.data));
+}
+
+function findKeyIdx(key){ return state.lic.licenses.findIndex(l=>l.license_key === key); }
+function mutLic(fn){
+  if(!state.lic) return;
+  fn(); state.licDirty = true; renderLicenses();
+  document.getElementById("btnCommit").disabled = false;
+}
+function bindKey(key){
+  const hwid = prompt("أدخل Hardware ID للربط:", ""); if(hwid === null) return;
+  mutLic(()=>{ const i=findKeyIdx(key); if(i>=0){ state.lic.licenses[i].bound_hwid=hwid.trim(); state.lic.licenses[i].activated_at=new Date().toISOString().slice(0,10);} });
+}
+function unbindKey(key){ mutLic(()=>{ const i=findKeyIdx(key); if(i>=0) state.lic.licenses[i].bound_hwid=""; }); }
+function toggleRevoke(key){ mutLic(()=>{ const i=findKeyIdx(key); if(i>=0) state.lic.licenses[i].status = state.lic.licenses[i].status==="revoked"?"active":"revoked"; }); }
+function editNote(key){
+  const i = findKeyIdx(key); const cur = (state.lic.licenses[i]||{}).note || "";
+  const note = prompt("الملاحظة:", cur); if(note === null) return;
+  mutLic(()=>{ const j=findKeyIdx(key); if(j>=0) state.lic.licenses[j].note = note; });
+}
+function delKey(key){
+  if(!confirm("حذف المفتاح؟\n" + key)) return;
+  mutLic(()=>{ state.lic.licenses = state.lic.licenses.filter(l=>l.license_key!==key); });
+}
+function copyKey(key){ navigator.clipboard.writeText(key).then(()=>log("تم نسخ " + key)); }
 async function doGen(){
-  if(secretFromCfg().length === 0){
-    log("ERROR: أدخل المفتاح السري للتوقيع أولاً.");
-    return;
-  }
-  if(secretFromCfg() !== "ghpages::" + GH_PARTS.join("::")){
-    log("تنبيه: المفتاح السري المُدخل لا يطابق السر المدمج — قد لا تصلح المفاتيح للعميل.");
-  }
-  if(!state.file){ await loadFile(); if(!state.file) return; }
+  const secret = (document.getElementById("cfgSecret").value||"");
+  if(!secret){ return log("ERROR: أدخل المفتاح السري أولاً."); }
+  if(secret !== "ghpages::" + GH_PARTS.join("::")) log("تنبيه: السر لا يطابق السر المدمج — قد لا تصلح المفاتيح للعميل.");
+  if(!state.lic){ await loadLicenses(); if(!state.lic) return; }
   const n = parseInt(document.getElementById("genCount").value || "1", 10);
   const note = document.getElementById("genNote").value.trim();
   const hwid = document.getElementById("genHwid").value.trim();
@@ -258,111 +523,150 @@ async function doGen(){
   const made = [];
   for(let i=0;i<n;i++){
     const key = await generateKey();
-    state.file.licenses.unshift({
-      license_key: key, status: "active", created_at: today, expires_at: null,
-      note: note, bound_hwid: hwid, activated_at: hwid ? today : null,
-    });
+    state.lic.licenses.unshift({license_key:key, status:"active", created_at:today, expires_at:null, note, bound_hwid:hwid, activated_at:hwid?today:null});
     made.push(key);
   }
-  state.dirty = true;
-  render();
-  document.getElementById("btnCommit").disabled = false;
+  state.licDirty = true; renderLicenses(); document.getElementById("btnCommit").disabled = false;
   log("تم توليد " + made.length + " مفتاح:\n" + made.join("\n"));
 }
 
-function findIndex(key){
-  return state.file.licenses.findIndex(l => l.license_key === key);
-}
-function mutate(fn){
-  if(!state.file){ return; }
-  fn();
-  state.dirty = true;
-  render();
-  document.getElementById("btnCommit").disabled = false;
-}
-function bindKey(key){
-  const hwid = prompt("أدخل Hardware ID للربط:", "");
-  if(hwid === null) return;
-  mutate(()=>{ const i=findIndex(key); if(i>=0){ state.file.licenses[i].bound_hwid = hwid.trim(); state.file.licenses[i].activated_at = new Date().toISOString().slice(0,10);} });
-  log("ربط " + key + " بـ " + hwid.trim());
-}
-function unbindKey(key){
-  mutate(()=>{ const i=findIndex(key); if(i>=0) state.file.licenses[i].bound_hwid = ""; });
-  log("إلغاء ربط " + key);
-}
-function toggleRevoke(key){
-  mutate(()=>{ const i=findIndex(key); if(i>=0){ state.file.licenses[i].status = state.file.licenses[i].status==="revoked"?"active":"revoked"; } });
-  log("تغيير حالة " + key);
-}
-function editNote(key){
-  const cur = (state.file.licenses[findIndex(key)]||{}).note || "";
-  const note = prompt("الملاحظة:", cur);
-  if(note === null) return;
-  mutate(()=>{ const i=findIndex(key); if(i>=0) state.file.licenses[i].note = note; });
-}
-function delKey(key){
-  if(!confirm("حذف المفتاح؟\n" + key)) return;
-  mutate(()=>{ state.file.licenses = state.file.licenses.filter(l=>l.license_key!==key); });
-  log("حذف " + key);
-}
-function copyKey(key){
-  navigator.clipboard.writeText(key).then(()=>log("تم نسخ " + key));
-}
-
-function render(){
-  const rows = document.getElementById("rows");
-  rows.innerHTML = "";
-  const list = (state.file && state.file.licenses) || [];
+function renderLicenses(){
+  const rows = document.getElementById("rows"); rows.innerHTML = "";
+  const list = (state.lic && state.lic.licenses) || [];
   document.getElementById("cnt").textContent = list.length;
   for(const l of list){
     const tr = document.createElement("tr");
-    const tdKey = document.createElement("td"); tdKey.className="key"; tdKey.textContent = l.license_key;
-    const tdStatus = document.createElement("td");
-    const badge = document.createElement("span");
-    badge.className = "badge " + (l.status==="revoked"?"b-revoked":"b-active");
-    badge.textContent = l.status==="revoked"?"ملغى":"نشط";
-    tdStatus.appendChild(badge);
-    const tdHwid = document.createElement("td"); tdHwid.className="hwid"; tdHwid.textContent = l.bound_hwid || "—"; tdHwid.title = l.bound_hwid || "";
-    const tdNote = document.createElement("td"); tdNote.textContent = l.note || "";
-    const tdAct = document.createElement("td");
-    const acts = [
-      ["نسخ", "sec", ()=>copyKey(l.license_key)],
-      [l.bound_hwid?"تغيير ربط":"ربط", "", ()=>bindKey(l.license_key)],
-      ["فك ربط", "sec", ()=>unbindKey(l.license_key)],
-      [l.status==="revoked"?"إعادة":"إلغاء", l.status==="revoked"?"ok":"warn", ()=>toggleRevoke(l.license_key)],
-      ["ملاحظة", "sec", ()=>editNote(l.license_key)],
-      ["حذف", "err", ()=>delKey(l.license_key)],
-    ];
-    for(const [txt, cls, fn] of acts){
-      const b = document.createElement("button");
-      b.textContent = txt; if(cls) b.className = "sm " + cls; else b.className = "sm";
-      b.addEventListener("click", fn);
-      tdAct.appendChild(b);
-      tdAct.appendChild(document.createTextNode(" "));
+    const tdKey=document.createElement("td"); tdKey.className="key"; tdKey.textContent=l.license_key;
+    const tdStatus=document.createElement("td");
+    const badge=document.createElement("span"); badge.className="badge "+(l.status==="revoked"?"b-revoked":"b-active");
+    badge.textContent = l.status==="revoked"?"ملغى":"نشط"; tdStatus.appendChild(badge);
+    const tdHwid=document.createElement("td"); tdHwid.className="hwid"; tdHwid.textContent=l.bound_hwid||"—"; tdHwid.title=l.bound_hwid||"";
+    const tdNote=document.createElement("td"); tdNote.textContent=l.note||"";
+    const tdAct=document.createElement("td");
+    const acts = [];
+    if(can("view")) acts.push(["نسخ","sec",()=>copyKey(l.license_key)]);
+    if(can("bind")) acts.push([l.bound_hwid?"تغيير ربط":"ربط","",()=>bindKey(l.license_key)]);
+    if(can("bind")) acts.push(["فك ربط","sec",()=>unbindKey(l.license_key)]);
+    if(can("revoke")) acts.push([l.status==="revoked"?"إعادة":"إلغاء", l.status==="revoked"?"ok":"warn", ()=>toggleRevoke(l.license_key)]);
+    if(can("note")) acts.push(["ملاحظة","sec",()=>editNote(l.license_key)]);
+    if(can("delete")) acts.push(["حذف","err",()=>delKey(l.license_key)]);
+    for(const [txt,cls,fn] of acts){
+      const b=document.createElement("button"); b.textContent=txt; b.className="sm"+(cls?" "+cls:"");
+      b.addEventListener("click", fn); tdAct.appendChild(b); tdAct.appendChild(document.createTextNode(" "));
     }
-    tr.append(tdKey, tdStatus, tdHwid, tdNote, tdAct);
-    rows.appendChild(tr);
+    tr.append(tdKey,tdStatus,tdHwid,tdNote,tdAct); rows.appendChild(tr);
   }
+}
+async function addUser(){
+  const user = document.getElementById("nuUser").value.trim();
+  const name = document.getElementById("nuName").value.trim();
+  const pass = document.getElementById("nuPass").value;
+  const perms = selectedPerms();
+  if(!user || !pass){ return log("ERROR: اسم المستخدم وكلمة المرور مطلوبان."); }
+  if(state.users.some(u=>u.username===user)){ return log("ERROR: اسم المستخدم موجود."); }
+  const hash = await hashPassword(pass);
+  state.users.push({username:user, name:name||user, role:"user", permissions:perms, active:true, password_hash:hash, created_at:new Date().toISOString().slice(0,10)});
+  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+  document.getElementById("nuUser").value=""; document.getElementById("nuName").value=""; document.getElementById("nuPass").value="";
+  renderPermsChecklist();
+  log("تمت إضافة الموظف: " + user);
+}
+function userByIdx(i){ return state.users[i]; }
+function changeRole(i){
+  const u = state.users[i];
+  const role = prompt("الدور (admin أو user):", u.role);
+  if(role === null) return;
+  const r = role.trim().toLowerCase();
+  if(r !== "admin" && r !== "user"){ return log("دور غير صحيح."); }
+  if(u.role === "admin" && r === "user" && countAdmins() <= 1){ return log("ERROR: لا يمكن إزالة آخر مدير."); }
+  u.role = r; if(r === "admin") u.permissions = PERMS.map(p=>p[0]);
+  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+}
+async function resetPass(i){
+  const u = state.users[i];
+  const pass = prompt("كلمة مرور جديدة لـ " + u.username + ":", "");
+  if(!pass) return;
+  u.password_hash = await hashPassword(pass);
+  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+  log("تم تحديث كلمة مرور " + u.username);
+}
+function toggleActive(i){
+  const u = state.users[i];
+  if(u.username === state.me.username){ return log("ERROR: لا يمكن تعطيل حسابك."); }
+  if(u.active !== false && countAdmins() <= 1 && u.role === "admin"){ return log("ERROR: لا يمكن تعطيل آخر مدير."); }
+  u.active = (u.active === false);
+  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+}
+function delUser(i){
+  const u = state.users[i];
+  if(u.username === state.me.username){ return log("ERROR: لا يمكنك حذف حسابك."); }
+  if(u.role === "admin" && countAdmins() <= 1){ return log("ERROR: لا يمكن حذف آخر مدير."); }
+  if(!confirm("حذف الموظف " + u.username + "؟")) return;
+  state.users.splice(i,1);
+  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+}
+function countAdmins(){ return state.users.filter(u=>u.role==="admin" && u.active!==false).length; }
+function renderUsers(){
+  const rows = document.getElementById("urows"); rows.innerHTML = "";
+  document.getElementById("ucnt").textContent = state.users.length;
+  state.users.forEach((u, i)=>{
+    const tr = document.createElement("tr");
+    const tdU=document.createElement("td"); tdU.className="key"; tdU.textContent=u.username;
+    const tdN=document.createElement("td"); tdN.textContent=u.name||"";
+    const tdR=document.createElement("td");
+    const rb=document.createElement("span"); rb.className="badge "+(u.role==="admin"?"b-admin":"b-user");
+    rb.textContent=u.role==="admin"?"مدير":"موظف"; tdR.appendChild(rb);
+    const tdP=document.createElement("td"); tdP.style.fontSize="11px";
+    tdP.textContent = u.role==="admin" ? "الكل" : (u.permissions||[]).map(k=>{const f=PERMS.find(p=>p[0]===k);return f?f[1]:k;}).join("، ");
+    const tdS=document.createElement("td");
+    const sb=document.createElement("span"); sb.className="badge "+(u.active===false?"b-revoked":"b-active");
+    sb.textContent=u.active===false?"معطّل":"نشط"; tdS.appendChild(sb);
+    const tdAct=document.createElement("td");
+    const acts=[
+      ["الدور","sec",()=>changeRole(i)],
+      ["كلمة المرور","sec",()=>resetPass(i)],
+      [u.active===false?"تشغيل":"تعطيل","warn",()=>toggleActive(i)],
+      ["حذف","err",()=>delUser(i)],
+    ];
+    for(const [txt,cls,fn] of acts){
+      const b=document.createElement("button"); b.textContent=txt; b.className="sm "+cls;
+      b.addEventListener("click", fn); tdAct.appendChild(b); tdAct.appendChild(document.createTextNode(" "));
+    }
+    tr.append(tdU,tdN,tdR,tdP,tdS,tdAct); rows.appendChild(tr);
+  });
+}
+
+function switchTab(which){
+  const lic = which === "lic";
+  document.getElementById("tabLic").classList.toggle("active", lic);
+  document.getElementById("tabUsers").classList.toggle("active", !lic);
+  document.getElementById("viewLic").classList.toggle("hidden", !lic);
+  document.getElementById("viewUsers").classList.toggle("hidden", lic);
+  if(!lic && (!state.users)) loadUsers();
 }
 
 function init(){
   loadCfg();
   updateStoreUrl();
-  ["cfgOwner","cfgRepo","cfgBranch","cfgPath"].forEach(id=>{
-    document.getElementById(id).addEventListener("input", updateStoreUrl);
-  });
-  document.getElementById("btnSaveCfg").addEventListener("click", saveCfg);
-  document.getElementById("btnLoad").addEventListener("click", loadFile);
-  document.getElementById("btnReload").addEventListener("click", loadFile);
+  document.getElementById("btnLogin").addEventListener("click", doLogin);
+  document.getElementById("lgPass").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+  document.getElementById("btnSetup").addEventListener("click", doSetup);
+  document.getElementById("btnShowCfg").addEventListener("click", ()=>{ document.getElementById("loginCfg").classList.toggle("hidden"); });
+  document.getElementById("btnSaveLoginCfg").addEventListener("click", ()=>{ saveCfg(); updateStoreUrl(); showLoginMsg("تم حفظ الإعدادات.", "ok"); });
+  document.getElementById("btnLogout").addEventListener("click", logout);
+  document.getElementById("btnSaveCfg").addEventListener("click", ()=>{ saveCfg(); updateStoreUrl(); });
+  document.getElementById("btnLoad").addEventListener("click", ()=>{ loadLicenses(); loadUsers(); });
+  document.getElementById("btnReload").addEventListener("click", loadLicenses);
+  document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
   document.getElementById("btnGen").addEventListener("click", doGen);
-  document.getElementById("btnCommit").addEventListener("click", commitFile);
-  if(crypto.subtle){
-    log("جاهز. أدخل التوكن والمفتاح السري ثم اضغط تحميل التراخيص.");
-  } else {
-    log("تنبيه: المتصفح لا يدعم Web Crypto (يتطلب HTTPS) — لن يعمل توليد المفاتيح.");
-  }
-  updateStoreUrl();
-  render();
+  document.getElementById("btnCommit").addEventListener("click", commitLicenses);
+  document.getElementById("btnCommitUsers").addEventListener("click", commitUsers);
+  document.getElementById("btnAddUser").addEventListener("click", addUser);
+  document.getElementById("tabLic").addEventListener("click", ()=>switchTab("lic"));
+  document.getElementById("tabUsers").addEventListener("click", ()=>switchTab("users"));
+  if(!crypto.subtle) log("تنبيه: المتصفح لا يدعم Web Crypto (يلزم HTTPS).");
+  else log("جاهز. سجّل الدخول للمتابعة.");
+  bootstrap();
 }
 init();
 </script>

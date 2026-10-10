@@ -1,7 +1,11 @@
-# attendance-license-ghpages
+# SoftKey
 
 Static license store for **Attendance Reporter** hosted on GitHub Pages — no
-server needed (replaces the optional `hrkey.onrender.com` service).
+server needed (replaces the optional `hrkey.onrender.com` service). Includes a
+browser admin panel with **login + employee database + permissions**.
+
+- Panel: **https://emadshipa.github.io/softkey/**
+- Store: `https://emadshipa.github.io/softkey/licenses.json`
 
 ## How it works
 
@@ -9,7 +13,7 @@ server needed (replaces the optional `hrkey.onrender.com` service).
   verifies the signature locally and reads status/binding from
   `licenses.json` published to GitHub.
 - `licenses.json` is the only source of truth: `active`/`revoked` status and the
-  `bound_hwid` of each key.
+  `bound_hwid` of each key. A key that is not listed in the store is rejected.
 - The signing secret ships inside the EXE, so this is **obfuscation**, not
   server-grade security. Only someone with this repo's write access can mint
   keys or change status.
@@ -18,78 +22,75 @@ server needed (replaces the optional `hrkey.onrender.com` service).
 
 | File | Purpose |
 | ---- | ------- |
-| `licenses.json` | The store (managed via the web panel or `gh_admin.py`) |
-| `index.html` | Static web admin panel hosted on GitHub Pages |
+| `licenses.json` | The license store (managed via the web panel or `gh_admin.py`) |
+| `users.json` | Employee accounts (PBKDF2-hashed passwords) + roles/permissions |
+| `index.html` | Static web admin panel: login, licenses, employees |
 | `gh_admin.py` | CLI tool: generate keys, bind/revoke, publish to GitHub |
 
 ## Web admin panel (no install, runs in the browser)
 
-Open: **https://emadshipa.github.io/attendance-license-ghpages/**
+Open: **https://emadshipa.github.io/softkey/**
 
-1. Enter a GitHub token (classic PAT with `public_repo`), Owner/Repo/Branch, and
-   the **signing secret** (same value embedded in the client; kept only in your
-   browser's `localStorage` — never committed to the repo).
-2. **تحميل التراخيص** to load `licenses.json`.
-3. **توليد** creates signed keys; **ربط/فك ربط/إلغاء/حذف/ملاحظة** manage a key.
-4. **حفظ التغييرات على GitHub** commits `licenses.json` via the GitHub API.
+1. First time only: open **إعدادات الاتصال** on the login screen, enter a GitHub
+   token (classic PAT with `public_repo` / `repo`) — needed to save anything.
+2. Log in with an employee account. The seeded first account is:
+   - username: `admin`
+   - password: `Tigertopto@hr`  ← **change it after first login**
+3. **التراخيص** tab: enter the signing secret once, then **تحميل التراخيص**,
+   **توليد**, and **ربط/فك ربط/إلغاء/حذف/ملاحظة**. Press
+   **حفظ التغييرات على GitHub** to publish.
+4. **الموظفون** tab (needs `manage_users`): add employees, set role and
+   per-task permissions, reset passwords, enable/disable or delete accounts.
 
-The panel needs HTTPS + Web Crypto (GitHub Pages provides both). Key signing
-uses the identical algorithm as `gh_admin.py` and the client, so keys generated
-in the browser validate in the client.
+### Permissions
 
-## Admin workflow (run on the admin PC)
+`view`, `generate`, `bind`, `revoke`, `delete`, `note`, `manage_users`.
+Role `admin` implies all permissions. Buttons are shown/hidden per permission.
+
+### Security note (important)
+
+GitHub Pages is static, so login and permissions are enforced **in the browser**
+and there is no server-side database. The real write boundary is the **GitHub
+token**: whoever holds it can change the repo. Keep the token only on trusted
+admin machines. If you need real, enforced access control, use the optional
+`attendance-license-server` (FastAPI) instead — it has a server-side users DB.
+
+## Admin CLI (alternative to the panel)
 
 ```powershell
-# list current keys
 python gh_admin.py list
-
-# generate 2 keys for two PCs and install the printed keys on them
 python gh_admin.py gen --count 2 --note "PC-1 PC-2"
-
-# after each new PC shows its Hardware ID (from the activation dialog),
-# bind its key to that hwid
 python gh_admin.py bind XXXX-XXXX-XXXX-XXXX-XXXX-XXXX <hwid>
-
-# publish everything to GitHub (repo write token -> GH_TOKEN or --token)
-$env:GH_TOKEN = "ghp_..."
-python gh_admin.py push
-
-# revoke / reactivate / unbind a key
 python gh_admin.py revoke XXXX-...
-python gh_admin.py reactivate XXXX-...
 python gh_admin.py unbind XXXX-...
+$env:GH_TOKEN = "ghp_..."   # or --token
+python gh_admin.py push
 ```
-
-The client will pick up the change on its next online check. A revoked key
-stops working within one check; a key bound to another PC is rejected.
 
 ## Client configuration
 
 The current Attendance Reporter build **uses this store by default** (no
-`onrender.com`), via:
+`onrender.com`):
 
 ```
-https://emadshipa.github.io/attendance-license-ghpages/licenses.json
+https://emadshipa.github.io/softkey/licenses.json
 ```
 
-No configuration is needed on the attendance PCs. To override per PC, edit
-`%APPDATA%\AttendanceReporter\settings.json`:
+Override per PC via `%APPDATA%\AttendanceReporter\settings.json`:
 
 ```json
 {
-  "license_store_url": "https://raw.githubusercontent.com/emadshipa/attendance-license-ghpages/main/licenses.json"
+  "license_store_url": "https://raw.githubusercontent.com/emadshipa/softkey/main/licenses.json",
+  "license_mode": "static"
 }
 ```
 
-- Set `license_store_url` to a custom store (raw URL is the reliable fallback).
-- Default mode is `static`. To switch back to the old server mode set
-  `"license_mode": "server"` (and a `license_server_url`).
+Mode selection: `license_mode` (default `static`). In `static` mode the store URL
+is: explicit `license_store_url` → `LICENSE_STORE_URL` env → default above.
 
-Mode selection: `license_mode` (default `static`) decides the transport.
-In `static` mode the store URL is: explicit `license_store_url` →
-`LICENSE_STORE_URL` env → default GitHub Pages store above.
+## Schemas
 
-## Store schema
+`licenses.json`:
 
 ```json
 {
@@ -107,7 +108,20 @@ In `static` mode the store URL is: explicit `license_store_url` →
 }
 ```
 
-- `status = active` → allowed.
-- `status = revoked` → rejected even if previously activated locally.
-- `bound_hwid` empty → any device (bind it the same day to keep control).
-- `bound_hwid` set → only that exact Hardware ID may activate.
+`users.json`:
+
+```json
+{
+  "users": [
+    {
+      "username": "admin",
+      "name": "المدير العام",
+      "role": "admin | user",
+      "permissions": ["view", "generate", "bind", "revoke", "delete", "note", "manage_users"],
+      "active": true,
+      "password_hash": "pbkdf2$120000$<salt-b64>$<hash-b64>",
+      "created_at": "2026-10-10"
+    }
+  ]
+}
+```

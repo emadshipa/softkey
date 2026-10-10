@@ -231,7 +231,7 @@ def main():
 
     p = sub.add_parser("push", help="publish licenses.json to GitHub")
     p.add_argument("--owner", default="emadshipa")
-    p.add_argument("--repo", default="attendance-license-ghpages")
+    p.add_argument("--repo", default="softkey")
     p.add_argument("--branch", default="main")
     p.add_argument("--file", default=DEFAULT_FILE)
     p.add_argument("--token", default="")

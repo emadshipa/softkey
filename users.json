@@ -1,0 +1,21 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "name": "المدير العام",
+      "role": "admin",
+      "permissions": [
+        "view",
+        "generate",
+        "bind",
+        "revoke",
+        "delete",
+        "note",
+        "manage_users"
+      ],
+      "active": true,
+      "password_hash": "pbkdf2$120000$8SHG8isopuFhT6EEcQ8G/g==$g6Bc8QYYxdhpIJKLuPNbPErle41cbp+Vn0k0zsZpri0=",
+      "created_at": "2026-10-10"
+    }
+  ]
+}

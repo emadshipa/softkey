@@ -49,8 +49,14 @@ stops working within one check; a key bound to another PC is rejected.
 
 ## Client configuration
 
-On each attendance PC, set the store URL so the app uses the static mode
-(instead of a server). Add this key to
+The current Attendance Reporter build **uses this store by default** (no
+`onrender.com`), via:
+
+```
+https://emadshipa.github.io/attendance-license-ghpages/licenses.json
+```
+
+No configuration is needed on the attendance PCs. To override per PC, edit
 `%APPDATA%\AttendanceReporter\settings.json`:
 
 ```json
@@ -59,16 +65,13 @@ On each attendance PC, set the store URL so the app uses the static mode
 }
 ```
 
-GitHub Pages URL alternative (if Pages is enabled on the repo branch):
+- Set `license_store_url` to a custom store (raw URL is the reliable fallback).
+- Default mode is `static`. To switch back to the old server mode set
+  `"license_mode": "server"` (and a `license_server_url`).
 
-```json
-{
-  "license_store_url": "https://emadshipa.github.io/attendance-license-ghpages/licenses.json"
-}
-```
-
-When `license_store_url` is empty, the app keeps using the old
-`license_server_url` (server mode) — so existing installs are unaffected.
+Mode selection: `license_mode` (default `static`) decides the transport.
+In `static` mode the store URL is: explicit `license_store_url` →
+`LICENSE_STORE_URL` env → default GitHub Pages store above.
 
 ## Store schema
 

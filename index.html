@@ -276,6 +276,7 @@ function saveCfg(){
   })));
   log("تم حفظ الإعدادات محلياً.");
 }
+function defaultSecret(){ return "ghpages::" + GH_PARTS.join("::"); }
 function loadCfg(){
   let c = {};
   try{ c = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); }catch(e){}
@@ -287,6 +288,8 @@ function loadCfg(){
   set("cfgLicsPath",c.licPath);
   set("cfgUsersPath",c.usersPath); set("lcfgUsersPath",c.usersPath);
   set("cfgSecret",c.secret);
+  const secEl = document.getElementById("cfgSecret");
+  if(secEl && !secEl.value) secEl.value = defaultSecret();
 }
 function updateStoreUrl(){
   const c = cfg();

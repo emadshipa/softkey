@@ -154,13 +154,13 @@ td.hwid{font-family:Consolas,monospace;direction:ltr;font-size:11px;max-width:15
         </div>
       </div>
       <button id="btnGen" class="ok">توليد وإضافة للمخزن</button>
-      <span class="hint">يتطلب إدخال المفتاح السري أعلاه. «أبد» = يعمل بلا تاريخ انتهاء.</span>
+      <span class="hint">«أبد» = يعمل بلا تاريخ انتهاء. يتم الحفظ على GitHub تلقائياً بعد التوليد.</span>
     </div>
 
     <div class="card">
       <h2>التراخيص (<span id="cnt">0</span>)</h2>
       <div class="actions-bar" style="margin-bottom:8px;">
-        <button id="btnCommit" class="warn" disabled>حفظ التغييرات على GitHub</button>
+        <button id="btnCommit" class="warn" disabled>حفظ الآن (الحفظ تلقائي)</button>
         <button id="btnReload" class="sec">إعادة التحميل</button>
       </div>
       <div style="overflow:auto;">
@@ -191,7 +191,7 @@ td.hwid{font-family:Consolas,monospace;direction:ltr;font-size:11px;max-width:15
     <div class="card">
       <h2>الموظفون (<span id="ucnt">0</span>)</h2>
       <div class="actions-bar" style="margin-bottom:8px;">
-        <button id="btnCommitUsers" class="warn" disabled>حفظ الموظفين على GitHub</button>
+        <button id="btnCommitUsers" class="warn" disabled>حفظ الآن (الحفظ تلقائي)</button>
         <button id="btnReloadUsers" class="sec">إعادة التحميل</button>
       </div>
       <div style="overflow:auto;">
@@ -229,6 +229,18 @@ let state = {
   users: null, usersSha: null, usersDirty: false,
   me: null,
 };
+let licTimer = null, usersTimer = null;
+function autoSaveOn(){ return true; }
+function scheduleLicCommit(){
+  if(!autoSaveOn()) return;
+  clearTimeout(licTimer);
+  licTimer = setTimeout(()=>{ if(state.licDirty) commitLicenses(true); }, 900);
+}
+function scheduleUsersCommit(){
+  if(!autoSaveOn()) return;
+  clearTimeout(usersTimer);
+  usersTimer = setTimeout(()=>{ if(state.usersDirty) commitUsers(true); }, 900);
+}
 
 function log(msg){
   const el = document.getElementById("log");
@@ -498,13 +510,17 @@ async function loadLicenses(){
   renderLicenses();
   log("تم تحميل " + state.lic.licenses.length + " ترخيص.");
 }
-async function commitLicenses(){
+async function commitLicenses(auto){
   if(!state.lic){ return log("ERROR: لا يوجد ملف محمّل."); }
+  if(!state.licDirty && auto) return;
+  if(!cfg().token){ log("تعذّر الحفظ التلقائي: لا يوجد GitHub Token."); return; }
+  const rev = state.licRev || 0;
   const res = await writeRepoFile(cfg().licPath, state.lic, state.licSha, "Update license store (" + state.lic.licenses.length + " keys)");
   if(res.status === 200 || res.status === 201){
     state.licSha = res.data.content ? res.data.content.sha : state.licSha;
     state.licDirty = false; document.getElementById("btnCommit").disabled = true;
-    log("تم حفظ التراخيص على GitHub ✓");
+    log(auto ? "حفظ تلقائي للتراخيص على GitHub ✓" : "تم حفظ التراخيص على GitHub ✓");
+    if((state.licRev || 0) !== rev){ state.licDirty = true; scheduleLicCommit(); }
   } else log("ERROR حفظ (" + res.status + "): " + JSON.stringify(res.data));
 }
 async function loadUsers(){
@@ -516,21 +532,26 @@ async function loadUsers(){
   renderUsers();
   log("تم تحميل " + state.users.length + " موظف.");
 }
-async function commitUsers(){
-  if(!state.users){ return; }
+async function commitUsers(auto){
+  if(!state.users) return;
+  if(!state.usersDirty && auto) return;
+  if(!cfg().token){ log("تعذّر الحفظ التلقائي: لا يوجد GitHub Token."); return; }
+  const rev = state.usersRev || 0;
   const res = await writeRepoFile(cfg().usersPath, {users:state.users}, state.usersSha, "Update users (" + state.users.length + ")");
   if(res.status === 200 || res.status === 201){
     state.usersSha = res.data.content ? res.data.content.sha : state.usersSha;
     state.usersDirty = false; document.getElementById("btnCommitUsers").disabled = true;
-    log("تم حفظ الموظفين على GitHub ✓");
+    log(auto ? "حفظ تلقائي للموظفين على GitHub ✓" : "تم حفظ الموظفين على GitHub ✓");
+    if((state.usersRev || 0) !== rev){ state.usersDirty = true; scheduleUsersCommit(); }
   } else log("ERROR حفظ الموظفين (" + res.status + "): " + JSON.stringify(res.data));
 }
 
 function findKeyIdx(key){ return state.lic.licenses.findIndex(l=>l.license_key === key); }
 function mutLic(fn){
   if(!state.lic) return;
-  fn(); state.licDirty = true; renderLicenses();
+  fn(); state.licDirty = true; state.licRev = (state.licRev||0)+1; renderLicenses();
   document.getElementById("btnCommit").disabled = false;
+  scheduleLicCommit();
 }
 function bindKey(key){
   const hwid = prompt("أدخل Hardware ID للربط:", ""); if(hwid === null) return;
@@ -564,8 +585,9 @@ async function doGen(){
     state.lic.licenses.unshift({license_key:key, status:"active", created_at:today, expires_at:expires, note, bound_hwid:hwid, activated_at:hwid?today:null});
     made.push(key);
   }
-  state.licDirty = true; renderLicenses(); document.getElementById("btnCommit").disabled = false;
+  state.licDirty = true; state.licRev = (state.licRev||0)+1; renderLicenses(); document.getElementById("btnCommit").disabled = false;
   log("تم توليد " + made.length + " مفتاح" + (expires ? (" (ينتهي " + expires + ")") : " (بدون انتهاء)") + ":\n" + made.join("\n"));
+  scheduleLicCommit();
 }
 
 function renderLicenses(){
@@ -607,7 +629,7 @@ async function addUser(){
   if(state.users.some(u=>u.username===user)){ return log("ERROR: اسم المستخدم موجود."); }
   const hash = await hashPassword(pass);
   state.users.push({username:user, name:name||user, role:"user", permissions:perms, active:true, password_hash:hash, created_at:new Date().toISOString().slice(0,10)});
-  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+  state.usersDirty = true; state.usersRev = (state.usersRev||0)+1; renderUsers(); document.getElementById("btnCommitUsers").disabled = false; scheduleUsersCommit();
   document.getElementById("nuUser").value=""; document.getElementById("nuName").value=""; document.getElementById("nuPass").value="";
   renderPermsChecklist();
   log("تمت إضافة الموظف: " + user);
@@ -621,14 +643,14 @@ function changeRole(i){
   if(r !== "admin" && r !== "user"){ return log("دور غير صحيح."); }
   if(u.role === "admin" && r === "user" && countAdmins() <= 1){ return log("ERROR: لا يمكن إزالة آخر مدير."); }
   u.role = r; if(r === "admin") u.permissions = PERMS.map(p=>p[0]);
-  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+  state.usersDirty = true; state.usersRev = (state.usersRev||0)+1; renderUsers(); document.getElementById("btnCommitUsers").disabled = false; scheduleUsersCommit();
 }
 async function resetPass(i){
   const u = state.users[i];
   const pass = prompt("كلمة مرور جديدة لـ " + u.username + ":", "");
   if(!pass) return;
   u.password_hash = await hashPassword(pass);
-  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+  state.usersDirty = true; state.usersRev = (state.usersRev||0)+1; renderUsers(); document.getElementById("btnCommitUsers").disabled = false; scheduleUsersCommit();
   log("تم تحديث كلمة مرور " + u.username);
 }
 function toggleActive(i){
@@ -636,7 +658,7 @@ function toggleActive(i){
   if(u.username === state.me.username){ return log("ERROR: لا يمكن تعطيل حسابك."); }
   if(u.active !== false && countAdmins() <= 1 && u.role === "admin"){ return log("ERROR: لا يمكن تعطيل آخر مدير."); }
   u.active = (u.active === false);
-  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+  state.usersDirty = true; state.usersRev = (state.usersRev||0)+1; renderUsers(); document.getElementById("btnCommitUsers").disabled = false; scheduleUsersCommit();
 }
 function delUser(i){
   const u = state.users[i];
@@ -644,7 +666,7 @@ function delUser(i){
   if(u.role === "admin" && countAdmins() <= 1){ return log("ERROR: لا يمكن حذف آخر مدير."); }
   if(!confirm("حذف الموظف " + u.username + "؟")) return;
   state.users.splice(i,1);
-  state.usersDirty = true; renderUsers(); document.getElementById("btnCommitUsers").disabled = false;
+  state.usersDirty = true; state.usersRev = (state.usersRev||0)+1; renderUsers(); document.getElementById("btnCommitUsers").disabled = false; scheduleUsersCommit();
 }
 function countAdmins(){ return state.users.filter(u=>u.role==="admin" && u.active!==false).length; }
 function renderUsers(){

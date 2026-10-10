@@ -15,8 +15,8 @@
       "created_at": "2026-10-10",
       "expires_at": null,
       "note": "",
-      "bound_hwid": "",
-      "activated_at": null
+      "bound_hwid": "a769a533d65f36b49a8b9b73fb621f3b6ce699a909b70e858129891de2b44ebc",
+      "activated_at": "2026-10-10"
     }
   ]
 }

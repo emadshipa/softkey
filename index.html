@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة تراخيص الحضور - GitHub Pages</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--line:#334155;--fg:#e2e8f0;--mut:#94a3b8;--pri:#2563eb;--ok:#16a34a;--warn:#d97706;--err:#dc2626;}
+*{box-sizing:border-box;font-family:"Segoe UI",Tahoma,sans-serif;}
+body{margin:0;background:var(--bg);color:var(--fg);}
+header{background:#111827;padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;}
+header h1{font-size:18px;margin:0;}
+header .store{font-size:12px;color:var(--mut);direction:ltr;}
+main{max-width:1150px;margin:0 auto;padding:18px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:14px;margin:0 0 10px;color:var(--mut);font-weight:600;}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;}
+input,select,textarea{background:#0b1220;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;width:100%;}
+textarea{min-height:70px;direction:ltr;font-family:Consolas,monospace;}
+.row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.field{margin-bottom:10px;}
+button{background:var(--pri);color:#fff;border:0;border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer;}
+button.sec{background:#334155;}
+button.ok{background:var(--ok);}
+button.warn{background:var(--warn);}
+button.err{background:var(--err);}
+button.sm{padding:4px 8px;font-size:12px;}
+button:disabled{opacity:.5;cursor:not-allowed;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:right;}
+th{color:var(--mut);font-weight:600;text-align:right;}
+td.key{font-family:Consolas,monospace;direction:ltr;text-align:left;font-size:12px;}
+td.hwid{font-family:Consolas,monospace;direction:ltr;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;}
+.b-active{background:rgba(22,163,74,.2);color:#4ade80;}
+.b-revoked{background:rgba(220,38,38,.2);color:#f87171;}
+#log{font-family:Consolas,monospace;font-size:12px;direction:ltr;white-space:pre-wrap;max-height:140px;overflow:auto;background:#0b1220;border:1px solid var(--line);border-radius:6px;padding:8px;}
+.actions-bar{display:flex;gap:8px;flex-wrap:wrap;}
+.hint{font-size:11.5px;color:var(--mut);margin-top:4px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>لوحة إدارة تراخيص الحضور</h1>
+  <span class="store" id="storeUrl"></span>
+</header>
+<main>
+  <div class="card">
+    <h2>إعدادات الاتصال (تُحفظ محلياً في المتصفح فقط)</h2>
+    <div class="row3">
+      <div class="field"><label>GitHub Token (صلاحية public_repo / repo)</label><input id="cfgToken" type="password" autocomplete="off"></div>
+      <div class="field"><label>المالك Owner</label><input id="cfgOwner" value="emadshipa"></div>
+      <div class="field"><label>الريبو Repo</label><input id="cfgRepo" value="attendance-license-ghpages"></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>الفرع Branch</label><input id="cfgBranch" value="main"></div>
+      <div class="field"><label>مسار الملف</label><input id="cfgPath" value="licenses.json" dir="ltr"></div>
+      <div class="field"><label>المفتاح السري للتوقيع (Secret)</label><input id="cfgSecret" type="password" autocomplete="off"></div>
+    </div>
+    <div class="actions-bar">
+      <button id="btnSaveCfg">حفظ الإعدادات</button>
+      <button id="btnLoad" class="sec">تحميل التراخيص</button>
+      <span class="hint" id="cfgHint"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>توليد مفاتيح جديدة</h2>
+    <div class="row3">
+      <div class="field"><label>العدد</label><input id="genCount" type="number" value="1" min="1" max="200"></div>
+      <div class="field"><label>ملاحظة</label><input id="genNote" placeholder="مثال: PC-1"></div>
+      <div class="field"><label>ربط بجهاز Hardware ID (اختياري)</label><input id="genHwid" dir="ltr" placeholder="اتركه فارغاً للربط لاحقاً"></div>
+    </div>
+    <button id="btnGen" class="ok">توليد وإضافة للمخزن</button>
+    <span class="hint">التوليد يتطلب إدخال المفتاح السري أعلاه.</span>
+  </div>
+
+  <div class="card">
+    <h2>التراخيص (<span id="cnt">0</span>)</h2>
+    <div class="actions-bar" style="margin-bottom:8px;">
+      <button id="btnCommit" class="warn" disabled>حفظ التغييرات على GitHub</button>
+      <button id="btnReload" class="sec">إعادة التحميل</button>
+    </div>
+    <div style="overflow:auto;">
+      <table>
+        <thead><tr><th>المفتاح</th><th>الحالة</th><th>الجهاز</th><th>ملاحظة</th><th>إجراءات</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>السجل</h2>
+    <div id="log"></div>
+  </div>
+</main>
+
+<script>
+const GH_PARTS = ["K9qR2vT8","4mN7pX3w","B6hJ5cL0","eZ1sD8fA"];
+const B32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const LS_KEY = "ar_license_admin_cfg";
+let state = { file: null, sha: null, dirty: false };
+
+function log(msg){
+  const el = document.getElementById("log");
+  const t = new Date().toLocaleTimeString();
+  el.textContent = "[" + t + "] " + msg + "\n" + el.textContent;
+}
+function secretFromCfg(){
+  const s = document.getElementById("cfgSecret").value.trim();
+  return s;
+}
+function cfg(){
+  return {
+    token: document.getElementById("cfgToken").value.trim(),
+    owner: document.getElementById("cfgOwner").value.trim(),
+    repo: document.getElementById("cfgRepo").value.trim(),
+    branch: document.getElementById("cfgBranch").value.trim() || "main",
+    path: document.getElementById("cfgPath").value.trim() || "licenses.json",
+  };
+}
+function saveCfg(){
+  localStorage.setItem(LS_KEY, JSON.stringify({
+    token: document.getElementById("cfgToken").value,
+    owner: document.getElementById("cfgOwner").value,
+    repo: document.getElementById("cfgRepo").value,
+    branch: document.getElementById("cfgBranch").value,
+    path: document.getElementById("cfgPath").value,
+    secret: document.getElementById("cfgSecret").value,
+  }));
+  log("تم حفظ الإعدادات محلياً.");
+}
+function loadCfg(){
+  try{
+    const c = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    if(c.token) document.getElementById("cfgToken").value = c.token;
+    if(c.owner) document.getElementById("cfgOwner").value = c.owner;
+    if(c.repo) document.getElementById("cfgRepo").value = c.repo;
+    if(c.branch) document.getElementById("cfgBranch").value = c.branch;
+    if(c.path) document.getElementById("cfgPath").value = c.path;
+    if(c.secret) document.getElementById("cfgSecret").value = c.secret;
+  }catch(e){}
+}
+function updateStoreUrl(){
+  const c = cfg();
+  document.getElementById("storeUrl").textContent =
+    "https://" + c.owner + ".github.io/" + c.repo + "/" + c.path +
+    "   |   raw: https://raw.githubusercontent.com/" + c.owner + "/" + c.repo + "/" + c.branch + "/" + c.path;
+}
+
+async function hmacSign(payloadGroups){
+  const secret = "ghpages::" + GH_PARTS.join("::");
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret),
+    {name:"HMAC", hash:"SHA-256"}, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadGroups));
+  const bytes = new Uint8Array(sig).slice(0,5);
+  let v = 0n;
+  for(const b of bytes) v = (v << 8n) | BigInt(b);
+  let out = "";
+  for(let i=0;i<8;i++){ out = B32[Number(v & 31n)] + out; v >>= 5n; }
+  return out;
+}
+function hex(bytes){
+  return Array.from(bytes).map(b=>b.toString(16).padStart(2,"0")).join("").toUpperCase();
+}
+async function generateKey(){
+  const rnd = new Uint8Array(10);
+  crypto.getRandomValues(rnd);
+  const payload = hex(rnd);
+  const groups = payload.match(/.{1,4}/g);
+  const payloadGroups = groups.join("-");
+  const sig = await hmacSign(payloadGroups);
+  return payloadGroups + "-" + sig;
+}
+
+async function ghRequest(method, url, body){
+  const c = cfg();
+  const headers = {"Accept":"application/vnd.github+json","Authorization":"Bearer " + c.token};
+  const opts = {method, headers};
+  if(body){ headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
+  const res = await fetch(url, opts);
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  return {status: res.status, data};
+}
+function contentsUrl(){
+  const c = cfg();
+  return "https://api.github.com/repos/" + c.owner + "/" + c.repo + "/contents/" + c.path;
+}
+function b64encode(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  bytes.forEach(b=>bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+function b64decode(b64){
+  const bin = atob(b64.replace(/\n/g,""));
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+async function loadFile(){
+  const c = cfg();
+  if(!c.token || !c.owner || !c.repo){ log("ERROR: أكمل الإعدادات أولاً."); return; }
+  const res = await ghRequest("GET", contentsUrl() + "?ref=" + encodeURIComponent(c.branch), null);
+  if(res.status === 200){
+    const content = b64decode(res.data.content);
+    state.file = JSON.parse(content);
+    state.sha = res.data.sha;
+  } else if(res.status === 404){
+    state.file = {licenses: []};
+    state.sha = null;
+    log("الملف غير موجود — سيتم إنشاؤه عند الحفظ.");
+  } else {
+    log("ERROR تحميل (" + res.status + "): " + JSON.stringify(res.data));
+    return;
+  }
+  if(!state.file.licenses) state.file.licenses = [];
+  state.dirty = false;
+  render();
+  log("تم تحميل " + state.file.licenses.length + " ترخيص.");
+}
+async function commitFile(){
+  const c = cfg();
+  if(!state.file){ log("ERROR: لا يوجد ملف محمّل."); return; }
+  const body = {
+    message: "Update license store (" + state.file.licenses.length + " keys)",
+    content: b64encode(JSON.stringify(state.file, null, 2)),
+    branch: c.branch,
+  };
+  if(state.sha) body.sha = state.sha;
+  const res = await ghRequest("PUT", contentsUrl(), body);
+  if(res.status === 200 || res.status === 201){
+    state.sha = res.data.content ? res.data.content.sha : state.sha;
+    state.dirty = false;
+    document.getElementById("btnCommit").disabled = true;
+    log("تم الحفظ على GitHub بنجاح ✓");
+  } else {
+    log("ERROR حفظ (" + res.status + "): " + JSON.stringify(res.data));
+  }
+}
+
+async function doGen(){
+  if(secretFromCfg().length === 0){
+    log("ERROR: أدخل المفتاح السري للتوقيع أولاً.");
+    return;
+  }
+  if(secretFromCfg() !== "ghpages::" + GH_PARTS.join("::")){
+    log("تنبيه: المفتاح السري المُدخل لا يطابق السر المدمج — قد لا تصلح المفاتيح للعميل.");
+  }
+  if(!state.file){ await loadFile(); if(!state.file) return; }
+  const n = parseInt(document.getElementById("genCount").value || "1", 10);
+  const note = document.getElementById("genNote").value.trim();
+  const hwid = document.getElementById("genHwid").value.trim();
+  const today = new Date().toISOString().slice(0,10);
+  const made = [];
+  for(let i=0;i<n;i++){
+    const key = await generateKey();
+    state.file.licenses.unshift({
+      license_key: key, status: "active", created_at: today, expires_at: null,
+      note: note, bound_hwid: hwid, activated_at: hwid ? today : null,
+    });
+    made.push(key);
+  }
+  state.dirty = true;
+  render();
+  document.getElementById("btnCommit").disabled = false;
+  log("تم توليد " + made.length + " مفتاح:\n" + made.join("\n"));
+}
+
+function findIndex(key){
+  return state.file.licenses.findIndex(l => l.license_key === key);
+}
+function mutate(fn){
+  if(!state.file){ return; }
+  fn();
+  state.dirty = true;
+  render();
+  document.getElementById("btnCommit").disabled = false;
+}
+function bindKey(key){
+  const hwid = prompt("أدخل Hardware ID للربط:", "");
+  if(hwid === null) return;
+  mutate(()=>{ const i=findIndex(key); if(i>=0){ state.file.licenses[i].bound_hwid = hwid.trim(); state.file.licenses[i].activated_at = new Date().toISOString().slice(0,10);} });
+  log("ربط " + key + " بـ " + hwid.trim());
+}
+function unbindKey(key){
+  mutate(()=>{ const i=findIndex(key); if(i>=0) state.file.licenses[i].bound_hwid = ""; });
+  log("إلغاء ربط " + key);
+}
+function toggleRevoke(key){
+  mutate(()=>{ const i=findIndex(key); if(i>=0){ state.file.licenses[i].status = state.file.licenses[i].status==="revoked"?"active":"revoked"; } });
+  log("تغيير حالة " + key);
+}
+function editNote(key){
+  const cur = (state.file.licenses[findIndex(key)]||{}).note || "";
+  const note = prompt("الملاحظة:", cur);
+  if(note === null) return;
+  mutate(()=>{ const i=findIndex(key); if(i>=0) state.file.licenses[i].note = note; });
+}
+function delKey(key){
+  if(!confirm("حذف المفتاح؟\n" + key)) return;
+  mutate(()=>{ state.file.licenses = state.file.licenses.filter(l=>l.license_key!==key); });
+  log("حذف " + key);
+}
+function copyKey(key){
+  navigator.clipboard.writeText(key).then(()=>log("تم نسخ " + key));
+}
+
+function render(){
+  const rows = document.getElementById("rows");
+  rows.innerHTML = "";
+  const list = (state.file && state.file.licenses) || [];
+  document.getElementById("cnt").textContent = list.length;
+  for(const l of list){
+    const tr = document.createElement("tr");
+    const tdKey = document.createElement("td"); tdKey.className="key"; tdKey.textContent = l.license_key;
+    const tdStatus = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = "badge " + (l.status==="revoked"?"b-revoked":"b-active");
+    badge.textContent = l.status==="revoked"?"ملغى":"نشط";
+    tdStatus.appendChild(badge);
+    const tdHwid = document.createElement("td"); tdHwid.className="hwid"; tdHwid.textContent = l.bound_hwid || "—"; tdHwid.title = l.bound_hwid || "";
+    const tdNote = document.createElement("td"); tdNote.textContent = l.note || "";
+    const tdAct = document.createElement("td");
+    const acts = [
+      ["نسخ", "sec", ()=>copyKey(l.license_key)],
+      [l.bound_hwid?"تغيير ربط":"ربط", "", ()=>bindKey(l.license_key)],
+      ["فك ربط", "sec", ()=>unbindKey(l.license_key)],
+      [l.status==="revoked"?"إعادة":"إلغاء", l.status==="revoked"?"ok":"warn", ()=>toggleRevoke(l.license_key)],
+      ["ملاحظة", "sec", ()=>editNote(l.license_key)],
+      ["حذف", "err", ()=>delKey(l.license_key)],
+    ];
+    for(const [txt, cls, fn] of acts){
+      const b = document.createElement("button");
+      b.textContent = txt; if(cls) b.className = "sm " + cls; else b.className = "sm";
+      b.addEventListener("click", fn);
+      tdAct.appendChild(b);
+      tdAct.appendChild(document.createTextNode(" "));
+    }
+    tr.append(tdKey, tdStatus, tdHwid, tdNote, tdAct);
+    rows.appendChild(tr);
+  }
+}
+
+function init(){
+  loadCfg();
+  updateStoreUrl();
+  ["cfgOwner","cfgRepo","cfgBranch","cfgPath"].forEach(id=>{
+    document.getElementById(id).addEventListener("input", updateStoreUrl);
+  });
+  document.getElementById("btnSaveCfg").addEventListener("click", saveCfg);
+  document.getElementById("btnLoad").addEventListener("click", loadFile);
+  document.getElementById("btnReload").addEventListener("click", loadFile);
+  document.getElementById("btnGen").addEventListener("click", doGen);
+  document.getElementById("btnCommit").addEventListener("click", commitFile);
+  if(crypto.subtle){
+    log("جاهز. أدخل التوكن والمفتاح السري ثم اضغط تحميل التراخيص.");
+  } else {
+    log("تنبيه: المتصفح لا يدعم Web Crypto (يتطلب HTTPS) — لن يعمل توليد المفاتيح.");
+  }
+  updateStoreUrl();
+  render();
+}
+init();
+</script>
+</body>
+</html>

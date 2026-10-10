@@ -18,8 +18,24 @@ server needed (replaces the optional `hrkey.onrender.com` service).
 
 | File | Purpose |
 | ---- | ------- |
-| `licenses.json` | The store (manually managed via `gh_admin.py`) |
+| `licenses.json` | The store (managed via the web panel or `gh_admin.py`) |
+| `index.html` | Static web admin panel hosted on GitHub Pages |
 | `gh_admin.py` | CLI tool: generate keys, bind/revoke, publish to GitHub |
+
+## Web admin panel (no install, runs in the browser)
+
+Open: **https://emadshipa.github.io/attendance-license-ghpages/**
+
+1. Enter a GitHub token (classic PAT with `public_repo`), Owner/Repo/Branch, and
+   the **signing secret** (same value embedded in the client; kept only in your
+   browser's `localStorage` — never committed to the repo).
+2. **تحميل التراخيص** to load `licenses.json`.
+3. **توليد** creates signed keys; **ربط/فك ربط/إلغاء/حذف/ملاحظة** manage a key.
+4. **حفظ التغييرات على GitHub** commits `licenses.json` via the GitHub API.
+
+The panel needs HTTPS + Web Crypto (GitHub Pages provides both). Key signing
+uses the identical algorithm as `gh_admin.py` and the client, so keys generated
+in the browser validate in the client.
 
 ## Admin workflow (run on the admin PC)
 

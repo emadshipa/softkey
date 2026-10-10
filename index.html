@@ -137,8 +137,24 @@ td.hwid{font-family:Consolas,monospace;direction:ltr;font-size:11px;max-width:15
         <div class="field"><label>ملاحظة</label><input id="genNote" placeholder="مثال: PC-1"></div>
         <div class="field"><label>Hardware ID (اختياري)</label><input id="genHwid" dir="ltr" placeholder="اتركه فارغاً للربط لاحقاً"></div>
       </div>
+      <div class="row">
+        <div class="field"><label>مدة الصلاحية</label>
+          <select id="genExpiryMode">
+            <option value="forever">أبد (بدون انتهاء)</option>
+            <option value="limited">محدد بمدة</option>
+          </select>
+        </div>
+        <div class="field"><label>المدة</label><input id="genExpiryNum" type="number" value="30" min="1" disabled></div>
+        <div class="field"><label>الوحدة</label>
+          <select id="genExpiryUnit" disabled>
+            <option value="day">يوم</option>
+            <option value="month">شهر</option>
+            <option value="year">سنة</option>
+          </select>
+        </div>
+      </div>
       <button id="btnGen" class="ok">توليد وإضافة للمخزن</button>
-      <span class="hint">يتطلب إدخال المفتاح السري أعلاه.</span>
+      <span class="hint">يتطلب إدخال المفتاح السري أعلاه. «أبد» = يعمل بلا تاريخ انتهاء.</span>
     </div>
 
     <div class="card">
@@ -149,7 +165,7 @@ td.hwid{font-family:Consolas,monospace;direction:ltr;font-size:11px;max-width:15
       </div>
       <div style="overflow:auto;">
         <table>
-          <thead><tr><th>المفتاح</th><th>الحالة</th><th>الجهاز</th><th>ملاحظة</th><th>إجراءات</th></tr></thead>
+          <thead><tr><th>المفتاح</th><th>الحالة</th><th>الانتهاء</th><th>الجهاز</th><th>ملاحظة</th><th>إجراءات</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
@@ -352,6 +368,24 @@ async function generateKey(){
   const payloadGroups = payload.match(/.{1,4}/g).join("-");
   return payloadGroups + "-" + await hmacSign(payloadGroups);
 }
+function ymd(d){ const p=n=>String(n).padStart(2,"0"); return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+function computeExpiry(){
+  const mode = document.getElementById("genExpiryMode").value;
+  if(mode === "forever") return null;
+  const n = parseInt(document.getElementById("genExpiryNum").value || "0", 10);
+  const unit = document.getElementById("genExpiryUnit").value;
+  if(!n || n <= 0) return null;
+  const d = new Date();
+  if(unit === "day") d.setDate(d.getDate() + n);
+  else if(unit === "month") d.setMonth(d.getMonth() + n);
+  else d.setFullYear(d.getFullYear() + n);
+  return ymd(d);
+}
+function toggleExpiryFields(){
+  const forever = document.getElementById("genExpiryMode").value === "forever";
+  document.getElementById("genExpiryNum").disabled = forever;
+  document.getElementById("genExpiryUnit").disabled = forever;
+}
 
 function isAdmin(){ return state.me && state.me.role === "admin"; }
 function can(perm){
@@ -523,14 +557,15 @@ async function doGen(){
   const note = document.getElementById("genNote").value.trim();
   const hwid = document.getElementById("genHwid").value.trim();
   const today = new Date().toISOString().slice(0,10);
+  const expires = computeExpiry();
   const made = [];
   for(let i=0;i<n;i++){
     const key = await generateKey();
-    state.lic.licenses.unshift({license_key:key, status:"active", created_at:today, expires_at:null, note, bound_hwid:hwid, activated_at:hwid?today:null});
+    state.lic.licenses.unshift({license_key:key, status:"active", created_at:today, expires_at:expires, note, bound_hwid:hwid, activated_at:hwid?today:null});
     made.push(key);
   }
   state.licDirty = true; renderLicenses(); document.getElementById("btnCommit").disabled = false;
-  log("تم توليد " + made.length + " مفتاح:\n" + made.join("\n"));
+  log("تم توليد " + made.length + " مفتاح" + (expires ? (" (ينتهي " + expires + ")") : " (بدون انتهاء)") + ":\n" + made.join("\n"));
 }
 
 function renderLicenses(){
@@ -543,6 +578,9 @@ function renderLicenses(){
     const tdStatus=document.createElement("td");
     const badge=document.createElement("span"); badge.className="badge "+(l.status==="revoked"?"b-revoked":"b-active");
     badge.textContent = l.status==="revoked"?"ملغى":"نشط"; tdStatus.appendChild(badge);
+    const tdExp=document.createElement("td"); tdExp.style.direction="ltr"; tdExp.style.fontSize="11.5px";
+    if(l.expires_at){ const expired = l.expires_at < new Date().toISOString().slice(0,10); tdExp.textContent = l.expires_at; if(expired){ tdExp.style.color="#f87171"; tdExp.title="منتهي"; } }
+    else { tdExp.textContent = "أبد"; tdExp.style.color="#4ade80"; }
     const tdHwid=document.createElement("td"); tdHwid.className="hwid"; tdHwid.textContent=l.bound_hwid||"—"; tdHwid.title=l.bound_hwid||"";
     const tdNote=document.createElement("td"); tdNote.textContent=l.note||"";
     const tdAct=document.createElement("td");
@@ -557,7 +595,7 @@ function renderLicenses(){
       const b=document.createElement("button"); b.textContent=txt; b.className="sm"+(cls?" "+cls:"");
       b.addEventListener("click", fn); tdAct.appendChild(b); tdAct.appendChild(document.createTextNode(" "));
     }
-    tr.append(tdKey,tdStatus,tdHwid,tdNote,tdAct); rows.appendChild(tr);
+    tr.append(tdKey,tdStatus,tdExp,tdHwid,tdNote,tdAct); rows.appendChild(tr);
   }
 }
 async function addUser(){
@@ -665,6 +703,8 @@ function init(){
   document.getElementById("btnCommit").addEventListener("click", commitLicenses);
   document.getElementById("btnCommitUsers").addEventListener("click", commitUsers);
   document.getElementById("btnAddUser").addEventListener("click", addUser);
+  document.getElementById("genExpiryMode").addEventListener("change", toggleExpiryFields);
+  toggleExpiryFields();
   document.getElementById("tabLic").addEventListener("click", ()=>switchTab("lic"));
   document.getElementById("tabUsers").addEventListener("click", ()=>switchTab("users"));
   if(!crypto.subtle) log("تنبيه: المتصفح لا يدعم Web Crypto (يلزم HTTPS).");
